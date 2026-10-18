@@ -162,6 +162,23 @@
       margin: 26px 0 0; padding-top: 20px; border-top: 1px solid var(--line);
       color: var(--muted); font-size: .88rem; line-height: 1.55;
     }
+    .contribute {
+      margin: 18px 0 0;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: .9rem;
+      line-height: 1.6;
+    }
+    .contribute a {
+      color: var(--violet-bright);
+      font-weight: 700;
+      text-decoration: none;
+    }
+    .contribute a:hover,
+    .contribute a:focus-visible {
+      text-decoration: underline;
+    }
     .status { min-height: 1.5em; margin: 14px 0 0; color: #6ee7b7; font-size: .92rem; font-weight: 600; }
     .status.error { color: var(--rose); }
     @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
@@ -222,7 +239,12 @@
         <p id="empty-message" class="empty">No reminders yet. Add one above to get started.</p>
         <ul id="reminder-list" class="reminder-list" aria-label="Saved pet care reminders"></ul>
       </section>
-      <p class="storage-note">Reminders are stored locally in this browser and are not synced to other devices. This page does not send alarms or notifications, and no alerts will fire when the page is closed.</p>
+      <p class="storage-note">Reminders are stored locally in this browser and are not synced to other devices. This page does not send alarms or notifications, and no alerts will fire when the page is closed or the browser is not open.</p>
+      <footer class="contribute">
+        Want to help improve this app or turn it into a mobile app or browser extension?
+        <a href="https://github.com/M0M052/Pet-care-Updated/issues/1" target="_blank" rel="noopener noreferrer">See the collaboration issue</a>
+        or contribute on GitHub.
+      </footer>
     </section>
   </main>
   <script>
