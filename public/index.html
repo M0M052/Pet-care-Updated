@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1e1147">
+  <meta name="description" content="A simple, friendly pet care reminder app. Keep your furry friend's routine in one place.">
+  <title>Pet Care Reminders</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: "Segoe UI", "Trebuchet MS", system-ui, Arial, sans-serif;
+      color: #f5f3ff;
+      background: #0f0a2e;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      --violet: #8b5cf6;
+      --violet-bright: #a78bfa;
+      --fuchsia: #d946ef;
+      --fuchsia-bright: #e879f9;
+      --rose: #fb7185;
+      --rose-soft: rgba(251,113,133,0.12);
+      --rose-line: rgba(251,113,133,0.35);
+      --muted: #c4b5fd;
+      --line: rgba(255,255,255,0.12);
+      --surface: rgba(255,255,255,0.06);
+      --shadow: 0 24px 60px rgba(124,58,237,0.25);
+    }
+    * { box-sizing: border-box; }
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      padding: 40px 16px 64px;
+      background:
+        radial-gradient(ellipse at 12% -8%, rgba(217,70,239,0.28) 0, transparent 40rem),
+        radial-gradient(ellipse at 88% 4%, rgba(99,102,241,0.30) 0, transparent 38rem),
+        radial-gradient(ellipse at 50% 110%, rgba(139,92,246,0.22) 0, transparent 42rem),
+        linear-gradient(160deg, #0f0a2e 0%, #1e1147 50%, #2e1065 100%);
+      background-attachment: fixed;
+    }
+    main { width: min(100%, 800px); margin: 0 auto; }
+    .intro { margin: 0 0 30px; text-align: center; animation: fadeUp .6s ease both; }
+    .logo {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 72px; height: 72px; margin: 0 0 16px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, #d946ef, #8b5cf6 60%, #6366f1);
+      box-shadow: 0 12px 30px rgba(217,70,239,0.45), inset 0 1px 0 rgba(255,255,255,0.3);
+      font-size: 2.3rem; line-height: 1;
+    }
+    .eyebrow {
+      margin: 0 0 10px; color: var(--fuchsia-bright);
+      font-size: .78rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase;
+    }
+    h1 {
+      margin: 0; font-size: clamp(2.2rem, 7vw, 3.4rem); letter-spacing: -.045em; line-height: 1.06;
+      background: linear-gradient(135deg, #f5f3ff, #e879f9 60%, #a78bfa);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .intro p:last-child {
+      max-width: 42rem; margin: 14px auto 0; color: var(--muted);
+      font-size: 1.05rem; line-height: 1.6;
+    }
+    .panel {
+      padding: clamp(24px, 5vw, 38px);
+      border: 1px solid var(--line); border-radius: 28px;
+      background: var(--surface);
+      backdrop-filter: blur(20px) saturate(140%);
+      -webkit-backdrop-filter: blur(20px) saturate(140%);
+      box-shadow: var(--shadow);
+      animation: fadeUp .7s ease .05s both;
+    }
+    h2 { margin: 0; font-size: 1.4rem; letter-spacing: -.02em; display: flex; align-items: center; gap: 8px; color: #f5f3ff; }
+    form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 16px; margin-top: 24px; }
+    .field { display: grid; gap: 8px; }
+    .field label { font-size: .9rem; font-weight: 700; color: var(--violet-bright); }
+    .field input, .field select {
+      width: 100%; min-height: 50px; padding: 12px 14px;
+      border: 1px solid var(--line); border-radius: 14px;
+      background: rgba(255,255,255,0.04); color: #f5f3ff; font: inherit;
+      transition: border-color .15s, box-shadow .15s, background .15s;
+    }
+    .field input::placeholder { color: rgba(196,181,253,0.5); }
+    .field input:focus, .field select:focus, button:focus-visible {
+      outline: none; border-color: var(--violet);
+      box-shadow: 0 0 0 4px rgba(139,92,246,0.3);
+      background: rgba(139,92,246,0.08);
+    }
+    .field select option { background: #1e1147; color: #f5f3ff; }
+    .wide { grid-column: 1 / -1; }
+    .hidden-field { display: none; }
+    button {
+      min-height: 48px; border: 0; border-radius: 14px;
+      font: inherit; font-weight: 700; cursor: pointer;
+      transition: transform .08s, box-shadow .15s, filter .15s;
+    }
+    button:active { transform: translateY(1px); }
+    .save {
+      padding: 13px 20px;
+      background: linear-gradient(135deg, #d946ef, #8b5cf6);
+      color: #fff; box-shadow: 0 10px 26px rgba(217,70,239,0.4);
+    }
+    .save:hover { filter: brightness(1.08); box-shadow: 0 14px 32px rgba(217,70,239,0.55); }
+    .reminders { margin-top: 32px; }
+    .list-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .clear-all {
+      padding: 8px 14px; border: 1px solid var(--rose-line);
+      background: var(--rose-soft); color: var(--rose);
+      font-size: .85rem; font-weight: 700; border-radius: 12px;
+    }
+    .clear-all:hover { background: rgba(251,113,133,0.2); }
+    .reminder-list { display: grid; gap: 14px; margin: 18px 0 0; padding: 0; list-style: none; }
+    .reminder {
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      padding: 18px; border: 1px solid var(--line); border-radius: 18px;
+      background: rgba(255,255,255,0.04);
+      transition: border-color .15s, background .15s, transform .15s;
+    }
+    .reminder:hover { transform: translateY(-2px); background: rgba(255,255,255,0.07); }
+    .reminder.overdue { border-color: var(--rose-line); background: var(--rose-soft); box-shadow: 0 0 24px rgba(251,113,133,0.18); }
+    .reminder-copy { min-width: 0; flex: 1; }
+    .reminder-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .pet-name { overflow-wrap: anywhere; font-size: 1.05rem; font-weight: 800; color: #fff; }
+    .task-pill {
+      display: inline-block; padding: 3px 10px; border-radius: 999px;
+      background: rgba(139,92,246,0.2); color: var(--violet-bright);
+      font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+      border: 1px solid rgba(139,92,246,0.3);
+    }
+    .task-pill.feed { background: rgba(245,158,11,0.18); color: #fbbf24; border-color: rgba(245,158,11,0.35); }
+    .task-pill.walk { background: rgba(16,185,129,0.18); color: #34d399; border-color: rgba(16,185,129,0.35); }
+    .task-pill.medicine { background: rgba(168,85,247,0.18); color: #c4b5fd; border-color: rgba(168,85,247,0.4); }
+    .task-pill.other { background: rgba(56,189,248,0.18); color: #7dd3fc; border-color: rgba(56,189,248,0.35); }
+    .overdue-tag {
+      display: inline-block; padding: 3px 10px; border-radius: 999px;
+      background: linear-gradient(135deg, #fb7185, #e11d48); color: #fff;
+      font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+      box-shadow: 0 4px 12px rgba(251,113,133,0.4);
+    }
+    .task-time { display: block; margin-top: 7px; color: var(--muted); font-size: .9rem; line-height: 1.4; }
+    .reminder.overdue .task-time { color: var(--rose); }
+    .actions { display: flex; gap: 8px; flex: 0 0 auto; }
+    .edit, .delete { padding: 9px 14px; border-radius: 12px; font-size: .85rem; font-weight: 700; }
+    .edit { border: 1px solid var(--line); background: rgba(255,255,255,0.05); color: var(--violet-bright); }
+    .edit:hover { background: rgba(139,92,246,0.15); }
+    .delete { border: 1px solid var(--rose-line); background: var(--rose-soft); color: var(--rose); }
+    .delete:hover { background: rgba(251,113,133,0.2); }
+    .empty { margin: 18px 0 0; color: var(--muted); }
+    .editing-banner {
+      display: none; align-items: center; gap: 10px; margin: 18px 0 0;
+      padding: 14px 16px; border-radius: 14px;
+      background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.35); color: var(--violet-bright);
+      font-size: .92rem; font-weight: 700;
+    }
+    .editing-banner.active { display: flex; }
+    .editing-banner button {
+      margin-left: auto; min-height: 0; padding: 7px 13px;
+      background: transparent; color: var(--violet-bright); border: 1px solid rgba(139,92,246,0.35); font-size: .85rem; border-radius: 10px;
+    }
+    .storage-note {
+      margin: 26px 0 0; padding-top: 20px; border-top: 1px solid var(--line);
+      color: var(--muted); font-size: .88rem; line-height: 1.55;
+    }
+    .status { min-height: 1.5em; margin: 14px 0 0; color: #6ee7b7; font-size: .92rem; font-weight: 600; }
+    .status.error { color: var(--rose); }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+    @media (max-width: 540px) {
+      body { padding: 28px 12px 40px; }
+      form { grid-template-columns: 1fr; }
+      .wide { grid-column: auto; }
+      .reminder { align-items: flex-start; gap: 12px; padding: 16px; }
+      .actions { width: 100%; }
+      .edit, .delete { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="intro">
+      <div class="logo" aria-hidden="true">🐾</div>
+      <p class="eyebrow">A little care goes a long way</p>
+      <h1>Pet care reminders</h1>
+      <p>Keep your furry friend's routine in one simple place. Add a reminder and we'll keep your list in date-and-time order — and flag anything overdue.</p>
+    </header>
+    <section class="panel" aria-labelledby="form-heading">
+      <h2 id="form-heading">Add a reminder</h2>
+      <form id="reminder-form" novalidate>
+        <div class="field">
+          <label for="pet-name">Pet name</label>
+          <input id="pet-name" name="petName" type="text" maxlength="80" autocomplete="off" required>
+        </div>
+        <div class="field">
+          <label for="care-task">Care task</label>
+          <select id="care-task" name="task" required>
+            <option value="Feed">Feed</option>
+            <option value="Walk">Walk</option>
+            <option value="Medicine">Medicine</option>
+            <option value="Other">Other…</option>
+          </select>
+        </div>
+        <div class="field wide hidden-field" id="custom-task-field">
+          <label for="custom-task">Describe the task</label>
+          <input id="custom-task" name="customTask" type="text" maxlength="80" autocomplete="off" placeholder="e.g. Brush teeth, Trim nails">
+        </div>
+        <div class="field wide">
+          <label for="reminder-time">Date and time</label>
+          <input id="reminder-time" name="dateTime" type="datetime-local" required>
+        </div>
+        <button class="save wide" type="submit">Save reminder</button>
+      </form>
+      <div id="editing-banner" class="editing-banner" role="status">
+        <span>✏️ Editing an existing reminder</span>
+        <button type="button" id="cancel-edit">Cancel</button>
+      </div>
+      <p id="status" class="status" role="status" aria-live="polite" aria-atomic="true"></p>
+      <section class="reminders" aria-labelledby="list-heading">
+        <div class="list-head">
+          <h2 id="list-heading">Your reminders</h2>
+          <button class="clear-all" type="button" id="clear-all" hidden>Clear all</button>
+        </div>
+        <p id="empty-message" class="empty">No reminders yet. Add one above to get started.</p>
+        <ul id="reminder-list" class="reminder-list" aria-label="Saved pet care reminders"></ul>
+      </section>
+      <p class="storage-note">Reminders are stored locally in this browser and are not synced to other devices. This page does not send alarms or notifications, and no alerts will fire when the page is closed.</p>
+    </section>
+  </main>
+  <script>
+    "use strict";
+    const STORAGE_KEY = "pet-care-reminders";
+    const STATUS_TIMEOUT_MS = 4000;
+    const form = document.querySelector("#reminder-form");
+    const nameInput = document.querySelector("#pet-name");
+    const taskInput = document.querySelector("#care-task");
+    const customTaskField = document.querySelector("#custom-task-field");
+    const customTaskInput = document.querySelector("#custom-task");
+    const dateInput = document.querySelector("#reminder-time");
+    const list = document.querySelector("#reminder-list");
+    const emptyMessage = document.querySelector("#empty-message");
+    const clearAllBtn = document.querySelector("#clear-all");
+    const status = document.querySelector("#status");
+    const editingBanner = document.querySelector("#editing-banner");
+    const cancelEditBtn = document.querySelector("#cancel-edit");
+    const saveBtn = form.querySelector(".save");
+    let reminders = loadReminders();
+    let editingId = null;
+    let statusTimer = null;
+    function loadReminders() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) return [];
+        const parsed = JSON.parse(saved);
+        if (!Array.isArray(parsed)) throw new Error("Saved reminders are not a list.");
+        return parsed.filter((item) =>
+          item && typeof item.id === "string" && typeof item.petName === "string" &&
+          typeof item.task === "string" && typeof item.dateTime === "string" &&
+          Number.isFinite(new Date(item.dateTime).getTime())
+        );
+      } catch (error) {
+        announce("Saved reminders could not be read. Your existing browser data was left unchanged.", true);
+        return [];
+      }
+    }
+    function saveReminders() {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(reminders)); return true; }
+      catch (error) {
+        announce("Could not save reminders in this browser. Check browser storage settings and try again.", true);
+        return false;
+      }
+    }
+    function announce(message, isError) {
+      if (statusTimer) clearTimeout(statusTimer);
+      status.textContent = message;
+      status.classList.toggle("error", isError);
+      if (!isError) {
+        statusTimer = setTimeout(() => { status.textContent = ""; status.classList.remove("error"); }, STATUS_TIMEOUT_MS);
+      }
+    }
+    function isOverdue(dateTime) { return new Date(dateTime).getTime() < Date.now(); }
+    function taskClass(task) { return task.toLowerCase().replace(/[^a-z]/g, ""); }
+    function displayTask(reminder) {
+      if (reminder.task === "Other" && reminder.customTask) return reminder.customTask;
+      return reminder.task;
+    }
+    function renderReminders() {
+      list.replaceChildren();
+      const ordered = [...reminders].sort((first, second) =>
+        new Date(first.dateTime).getTime() - new Date(second.dateTime).getTime()
+      );
+      emptyMessage.hidden = ordered.length > 0;
+      clearAllBtn.hidden = ordered.length === 0;
+      for (const reminder of ordered) {
+        const overdue = isOverdue(reminder.dateTime);
+        const item = document.createElement("li");
+        item.className = "reminder" + (overdue ? " overdue" : "");
+        const copy = document.createElement("div");
+        copy.className = "reminder-copy";
+        const top = document.createElement("div");
+        top.className = "reminder-top";
+        const pet = document.createElement("span");
+        pet.className = "pet-name";
+        pet.textContent = reminder.petName;
+        const pill = document.createElement("span");
+        pill.className = "task-pill " + taskClass(reminder.task);
+        pill.textContent = displayTask(reminder);
+        top.append(pet, pill);
+        if (overdue) {
+          const tag = document.createElement("span");
+          tag.className = "overdue-tag";
+          tag.textContent = "Overdue";
+          top.append(tag);
+        }
+        const details = document.createElement("span");
+        details.className = "task-time";
+        details.textContent = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(reminder.dateTime));
+        copy.append(top, details);
+        const actions = document.createElement("div");
+        actions.className = "actions";
+        const editButton = document.createElement("button");
+        editButton.className = "edit";
+        editButton.type = "button";
+        editButton.textContent = "Edit";
+        editButton.setAttribute("aria-label", "Edit " + displayTask(reminder) + " reminder for " + reminder.petName);
+        editButton.addEventListener("click", () => startEdit(reminder.id));
+        const deleteButton = document.createElement("button");
+        deleteButton.className = "delete";
+        deleteButton.type = "button";
+        deleteButton.textContent = "Delete";
+        deleteButton.setAttribute("aria-label", "Delete " + displayTask(reminder) + " reminder for " + reminder.petName);
+        deleteButton.addEventListener("click", () => {
+          const previous = reminders;
+          reminders = reminders.filter((saved) => saved.id !== reminder.id);
+          if (!saveReminders()) { reminders = previous; return; }
+          if (editingId === reminder.id) cancelEdit();
+          renderReminders();
+          announce("Reminder for " + reminder.petName + " deleted.");
+        });
+        actions.append(editButton, deleteButton);
+        item.append(copy, actions);
+        list.append(item);
+      }
+    }
+    function startEdit(id) {
+      const reminder = reminders.find((r) => r.id === id);
+      if (!reminder) return;
+      editingId = id;
+      nameInput.value = reminder.petName;
+      taskInput.value = reminder.task;
+      toggleCustomTask(reminder.task === "Other");
+      if (reminder.task === "Other" && reminder.customTask) customTaskInput.value = reminder.customTask;
+      const d = new Date(reminder.dateTime);
+      const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+      dateInput.value = local.toISOString().slice(0, 16);
+      editingBanner.classList.add("active");
+      saveBtn.textContent = "Update reminder";
+      nameInput.focus();
+      nameInput.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    function cancelEdit() {
+      editingId = null;
+      editingBanner.classList.remove("active");
+      saveBtn.textContent = "Save reminder";
+      form.reset();
+      toggleCustomTask(false);
+    }
+    function toggleCustomTask(show) {
+      customTaskField.classList.toggle("hidden-field", !show);
+      if (!show) customTaskInput.value = "";
+    }
+    cancelEditBtn.addEventListener("click", () => { cancelEdit(); announce("Edit cancelled."); });
+    taskInput.addEventListener("change", () => { toggleCustomTask(taskInput.value === "Other"); });
+    clearAllBtn.addEventListener("click", () => {
+      if (!confirm("Delete all reminders? This cannot be undone.")) return;
+      const previous = reminders;
+      reminders = [];
+      if (!saveReminders()) { reminders = previous; return; }
+      cancelEdit();
+      renderReminders();
+      announce("All reminders cleared.");
+    });
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const petName = nameInput.value.trim();
+      const dateTime = new Date(dateInput.value);
+      if (!petName || !dateInput.value || !Number.isFinite(dateTime.getTime())) {
+        announce("Enter a pet name and a valid date and time.", true);
+        return;
+      }
+      if (taskInput.value === "Other" && !customTaskInput.value.trim()) {
+        announce("Please describe the custom task.", true);
+        customTaskInput.focus();
+        return;
+      }
+      const task = taskInput.value;
+      const customTask = task === "Other" ? customTaskInput.value.trim() : null;
+      const reminderData = { petName, task, customTask, dateTime: dateTime.toISOString() };
+      if (editingId) {
+        const target = reminders.find((r) => r.id === editingId);
+        if (!target) { cancelEdit(); return; }
+        const previous = { ...target };
+        Object.assign(target, reminderData);
+        if (!saveReminders()) { Object.assign(target, previous); return; }
+        cancelEdit();
+        renderReminders();
+        announce("Reminder for " + petName + " updated.");
+      } else {
+        const reminder = { id: (Date.now() + "-" + Math.random().toString(36).slice(2)), ...reminderData };
+        reminders = [...reminders, reminder];
+        if (!saveReminders()) { reminders = reminders.filter((saved) => saved.id !== reminder.id); return; }
+        renderReminders();
+        form.reset();
+        toggleCustomTask(false);
+        announce("Reminder saved for " + petName + ".");
+        nameInput.focus();
+      }
+    });
+    renderReminders();
+  </script>
+</body>
+</html>
