@@ -60,14 +60,39 @@ git push -u origin feature/my-idea
 
 Before opening a large PR, describe the idea in an issue so contributors can coordinate around the same approach.
 
-Deployment (Cloudflare)
+Deployment (Cloudflare Workers)
 
-To deploy the static site using Cloudflare Workers / Pages (example):
+The checked-in `wrangler.jsonc` serves `public/` as static assets under a separate
+preview Worker name. It does not configure or replace nova-companion.org.
 
-1. `npx wrangler deploy`
-2. Add a custom domain in the Cloudflare dashboard under your Worker → Domains.
+1. Install Node.js, then run `npx wrangler login` with your own Cloudflare account.
+2. Run `npx wrangler dev` for a local preview.
+3. Review the Worker name in `wrangler.jsonc`, then run `npx wrangler deploy`.
+4. Test the generated workers.dev URL before considering a custom domain.
 
-(If you want, open an issue and describe how you host the live site — I can help add CI, Pages, or Cloudflare configuration to this repo.)
+Connecting nova-companion.org is a separate owner decision. Keep the original
+live deployment intact until changes have been reviewed.
+
+Backup and behaviour
+
+- Export backup downloads a JSON file containing the reminders in this browser.
+- Import backup adds valid reminders and skips exact duplicates; it preserves
+  existing reminders. Files must be at most 2 MB and contain at most 5,000 records.
+- If saved browser data is unreadable, export preserves the raw data for recovery.
+  The app asks before overwriting unreadable data.
+- Overdue labels refresh while the page is open and when it becomes visible again.
+- No alarms, push notifications, background scheduling or cross-device sync are
+  implemented. PWA installation alone would not provide reliable closed-app alarms.
+
+Verification
+
+Run `node --test tests/reminders.test.cjs` for regression checks. Also manually
+check add/edit/delete, export/import, duplicate imports, and overdue transitions
+in a browser before deployment.
+
+Licensing
+
+Released under the MIT licence. See [LICENSE](LICENSE) for permissions and conditions.
 
 ---
 

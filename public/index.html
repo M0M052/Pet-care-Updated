@@ -239,6 +239,12 @@
         <p id="empty-message" class="empty">No reminders yet. Add one above to get started.</p>
         <ul id="reminder-list" class="reminder-list" aria-label="Saved pet care reminders"></ul>
       </section>
+      <div class="backup-actions" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:24px">
+        <button type="button" class="clear-all" id="export-backup">Export backup</button>
+        <button type="button" class="clear-all" id="import-backup">Import backup</button>
+        <input type="file" id="backup-file" accept="application/json,.json" hidden>
+      </div>
+      <p class="storage-note">Backups contain your pet names, tasks and schedules. Keep them somewhere private. Import adds new reminders and skips exact duplicates.</p>
       <p class="storage-note">Reminders are stored locally in this browser and are not synced to other devices. This page does not send alarms or notifications, and no alerts will fire when the page is closed or the browser is not open.</p>
       <footer class="contribute">
         Want to help improve this app or turn it into a mobile app or browser extension?
@@ -264,27 +270,36 @@
     const editingBanner = document.querySelector("#editing-banner");
     const cancelEditBtn = document.querySelector("#cancel-edit");
     const saveBtn = form.querySelector(".save");
-    let reminders = loadReminders();
     let editingId = null;
     let statusTimer = null;
+    let storageNeedsRecovery = false;
+    let reminders = loadReminders();
+    function validReminder(item) {
+      return item && typeof item.id === "string" && item.id.length > 0 &&
+        typeof item.petName === "string" && item.petName.trim().length > 0 && item.petName.length <= 80 &&
+        ["Feed", "Walk", "Medicine", "Other"].includes(item.task) &&
+        (item.task !== "Other" || (typeof item.customTask === "string" && item.customTask.trim().length > 0 && item.customTask.length <= 80)) &&
+        typeof item.dateTime === "string" && Number.isFinite(new Date(item.dateTime).getTime());
+    }
     function loadReminders() {
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
         if (!saved) return [];
         const parsed = JSON.parse(saved);
         if (!Array.isArray(parsed)) throw new Error("Saved reminders are not a list.");
-        return parsed.filter((item) =>
-          item && typeof item.id === "string" && typeof item.petName === "string" &&
-          typeof item.task === "string" && typeof item.dateTime === "string" &&
-          Number.isFinite(new Date(item.dateTime).getTime())
-        );
+        if (!parsed.every(validReminder) || new Set(parsed.map(item => item.id)).size !== parsed.length) {
+          throw new Error("Saved reminders contain invalid records.");
+        }
+        return parsed;
       } catch (error) {
-        announce("Saved reminders could not be read. Your existing browser data was left unchanged.", true);
+        storageNeedsRecovery = true;
+        announce("Saved reminders could not be read. Export a backup before replacing unreadable browser data.", true);
         return [];
       }
     }
     function saveReminders() {
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(reminders)); return true; }
+      if (storageNeedsRecovery && !confirm("Existing saved data could not be read. Export it first if you need to recover it. Replace it with the reminders currently shown?")) return false;
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(reminders)); storageNeedsRecovery = false; return true; }
       catch (error) {
         announce("Could not save reminders in this browser. Check browser storage settings and try again.", true);
         return false;
@@ -436,6 +451,61 @@
         nameInput.focus();
       }
     });
+    document.querySelector("#export-backup").addEventListener("click", () => {
+      try {
+        const raw = storageNeedsRecovery ? localStorage.getItem(STORAGE_KEY) : null;
+        const data = storageNeedsRecovery ? raw : JSON.stringify({ version: 1, reminders }, null, 2);
+        if (data === null) throw new Error("No saved data available.");
+        const url = URL.createObjectURL(new Blob([data], { type: "application/json" }));
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = storageNeedsRecovery ? "pet-care-recovery.json" : "pet-care-backup.json";
+        document.body.append(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        announce(storageNeedsRecovery ? "Raw saved data exported for recovery; it may need repair before import." : "Backup exported.");
+      } catch (error) { announce("Could not export a backup. Browser storage may be unavailable.", true); }
+    });
+    const backupFile = document.querySelector("#backup-file");
+    document.querySelector("#import-backup").addEventListener("click", () => backupFile.click());
+    backupFile.addEventListener("change", async () => {
+      const file = backupFile.files[0];
+      backupFile.value = "";
+      if (!file) return;
+      try {
+        if (file.size > 2 * 1024 * 1024) throw new Error("Choose a backup smaller than 2 MB.");
+        const parsed = JSON.parse(await file.text());
+        const incoming = Array.isArray(parsed) ? parsed : parsed && parsed.version === 1 ? parsed.reminders : null;
+        if (!Array.isArray(incoming) || incoming.length > 5000 || !incoming.every(validReminder)) {
+          throw new Error("This backup contains invalid reminders or an unsupported format.");
+        }
+        const signature = item => JSON.stringify([item.petName, item.task, item.task === "Other" ? item.customTask : null, new Date(item.dateTime).toISOString()]);
+        const seen = new Set(reminders.map(signature));
+        const additions = [];
+        for (const item of incoming) {
+          const key = signature(item);
+          if (seen.has(key)) continue;
+          seen.add(key);
+          additions.push({ id: crypto.randomUUID(), petName: item.petName, task: item.task,
+            customTask: item.task === "Other" ? item.customTask : null,
+            dateTime: new Date(item.dateTime).toISOString() });
+        }
+        if (!additions.length) { announce("No new reminders to import."); return; }
+        const previous = reminders;
+        reminders = [...reminders, ...additions];
+        if (!saveReminders()) { reminders = previous; return; }
+        renderReminders();
+        announce("Imported " + additions.length + " reminder(s).");
+      } catch (error) { announce("Import failed. " + error.message, true); }
+    });
+    function refreshOverdue() {
+      const items = list.querySelectorAll(".reminder");
+      const ordered = [...reminders].sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
+      if (ordered.some((item, index) => items[index] && items[index].classList.contains("overdue") !== isOverdue(item.dateTime))) renderReminders();
+    }
+    setInterval(refreshOverdue, 1000);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) refreshOverdue(); });
     renderReminders();
   </script>
 </body>
