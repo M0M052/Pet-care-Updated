@@ -11,7 +11,8 @@ Live demo: https://nova-companion.org
 
 Notes and collaboration
 
-- This repository (Pet-care-Updated) is a refreshed copy of the original site at https://nova-companion.org. The original site will be preserved separately so contributors can experiment here without affecting the archived site.
+- This repository (Pet-care-Updated) is a refreshed copy of the original site at https://nova-companion.org. The original site will be preserved separately so contributors can experiment here without disrupting the live experience.
+- This repo is intended for collaborative experimentation and improvements, especially around mobile UX, app-like behavior, and extension ideas.
 - If you'd like to collaborate, please fork the repo, create a branch for your changes, and open a pull request with a short description of what you changed and why.
 - Contributions are welcome for:
   - accessibility and localization improvements
@@ -20,13 +21,44 @@ Notes and collaboration
   - building browser extensions or companion apps that integrate with notifications
   - design/UX tweaks and new color themes
 
-How to contribute (quick):
-1. Fork this repository
-2. Create a feature branch: `git checkout -b my-feature`
-3. Make changes and commit: `git commit -am "Add feature X"`
-4. Push and open a pull request from your fork
+Contributing
 
-If you prefer, open an issue first to discuss larger changes before starting work.
+We welcome contributions from developers, designers, and testers.
+
+If you want to help, the best workflow is:
+
+1. Fork this repository.
+2. Create a feature branch: `git checkout -b my-feature`
+3. Make your changes locally.
+4. Commit with a clear message: `git commit -am "Add feature X"`
+5. Push and open a pull request from your fork.
+
+For larger changes, please open an issue first so we can discuss scope and avoid duplicate work.
+
+Good collaboration areas:
+
+- PWA support and installability on mobile devices
+- responsive/mobile-first layout improvements
+- system notifications and reminder alerts
+- accessibility and keyboard support
+- localization and language support
+- browser extension prototype ideas
+- syncing across devices or portable backup storage
+- design exploration and new themes
+
+Suggested contribution flow:
+
+```bash
+git clone https://github.com/YOUR-USERNAME/Pet-care-Updated.git
+cd Pet-care-Updated
+git checkout -b feature/my-idea
+# make your changes
+git add .
+git commit -m "Add my idea"
+git push -u origin feature/my-idea
+```
+
+Before opening a large PR, describe the idea in an issue so contributors can coordinate around the same approach.
 
 Deployment (Cloudflare)
 
@@ -63,7 +95,15 @@ git remote add origin https://github.com/YOUR-USERNAME/pet-care-reminders.git
 git push -u origin main
 ```
 
+Quick local preview:
+
+```bash
+cd public
+python3 -m http.server 8000
+```
+
+Then open: `http://localhost:8000`
+
 Contact / ownership
 
 This repo was created under the GitHub account: M0M052. If you'd like a different owner/org or a private visibility, tell me and I can recreate or transfer the repo accordingly.
-
